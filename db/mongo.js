@@ -15,6 +15,6 @@ exports = module.exports = {
 };
 exports.ObjectId = mongoose.Schema.Types.ObjectId;
 
-mongoose.connect('mongodb://localhost/gamblr');
+mongoose.connect('mongodb://localhost/wandelOfNiet');
 
 var _Schema = mongoose.Schema;

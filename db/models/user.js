@@ -4,18 +4,8 @@ var mongo = require('../mongo');
 var UserSchema = new mongo.Schema({
   username: { type: String, min: 4 },
   password: { type: String, min: 4 },
-  location: { type: String, default: 'Unknown' },
+  display_name: { type: String, min: 4},
   member_since: { type: Number, default: Date.now() }, // Timestamp
-  credit_balance: { type: Number, default: 5000 },
-  games_played: { type: Number, default: 0 },
-  friends: [{ type: mongo.ObjectId, ref: 'User' }], // Array of user ids, foreign key
-  session: {
-    token: { type: String },
-    expires: { type: Number } // Timestamp
-  }
-  // Alternatively, session_expires could also be set as a timestamp of when the
-  // session was started. That way, you could easily implement a system like
-  // Whatsapp's "Last seen on: <time>"
 });
 
 var UserModel = mongo.model('User', UserSchema);
