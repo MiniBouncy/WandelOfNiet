@@ -1,0 +1,3 @@
+# Node modules takes up a ton of space and makes git slower
+# Use 'npm install' regularly instead
+node_modules
