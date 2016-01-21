@@ -96,6 +96,33 @@ router.route('/:user_id')
   });
 })
 
+router.route('/login')
+
+.post(function(req, res, next) {
+  User.findOne({ username: req.body.username.toLowerCase() }, function(err, user) {
+    if (err) {
+      res.status(500);
+      res.send({
+        success: false,
+        message: 'Something went wrong: ' + err
+      });
+    } else {
+      if(user && user.password == req.body.password){
+        res.status(200);
+        res.send({
+          success: true,
+          user: user
+        });
+      } else {
+        res.status(500);
+        res.send({
+          success: false,
+          message: 'User does not exist'
+        });
+      }
+    }
+  });
+})
 .delete(function(req, res) {
 
   // retrieve the user
