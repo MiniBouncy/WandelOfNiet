@@ -5,6 +5,7 @@ var UserSchema = new mongo.Schema({
   username: { type: String, min: 4 },
   password: { type: String, min: 4 },
   display_name: { type: String, min: 4},
+  e_mail: { type: String, min: 4},
   member_since: { type: Number, default: Date.now() }, // Timestamp
 });
 
