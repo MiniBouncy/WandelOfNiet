@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var User = require('../db/models/user');
 
+
 router.route('/')
 
 
@@ -96,6 +97,127 @@ router.route('/:user_id')
   });
 })
 
+
+// Updates a user
+.put(function(req, res) {
+  User.findById(req.params.user_id, function(err, user) {
+    
+    if(err) {
+      res.status(500);
+      res.send({
+        success: false,
+        message: 'Something went wrong ' + err
+      });
+    }  
+      if(req.body.username){
+         user.username = req.body.username;
+      }
+
+      if(req.body.password){
+         user.password = req.body.password;
+      }
+
+      if(req.body.display_name){
+         user.display_name = req.body.display_name;
+      }
+      if(req.body.e_mail){
+         user.e_mail = req.body.e_mail;
+      }
+      
+      user.save(function(err) {
+      if (err) {
+        res.status(500);
+        res.send({
+          success: false,
+          message: 'Something went wrong'
+        });
+      } else {
+        res.status(200);
+        res.send({
+          success: true,
+          message: 'User updated'
+        });
+      }
+    });
+  });
+})
+
+// Delete a user
+.delete(function(req, res) {
+  User.findById(req.params.user_id, function(err, user) {
+    if (err) {
+      res.status(500);
+      res.send(err);
+    } else {
+      if (user) {
+        user.remove();
+        res.json({
+          success: true,
+          message: 'User successfully deleted'
+        });
+      } else {
+        res.status(400);
+        res.json({
+          success: false,
+          message: 'Could not find user.'
+        });
+        res.send();
+      }
+    }
+  });
+})
+
+router.route('/:user_id/balance')
+
+// Get user balance
+.post(function(req, res, next) {
+  User.findOne({ user_id: req.body.user_id }, function(err, user) {
+    if(err) {
+      res.status(500);
+      res.send({
+        success: false,
+        message: 'Something went wrong: ' +err
+      });
+    } else {
+      res.status(200);
+      res.send({
+        succes: true,
+        message: 'User balance: ' +user.balance
+      });
+
+    }
+  })
+})
+
+// Updates a users' balance POST-PUT-GET
+// TODO bank stuurt true terug als het aan die kant geslaagd is en dan kan de balance worden veranderd.
+.put(function(req, res) {
+  var sender = "NL16RABO0846653421";
+  var receiver = "NL08RABO0784598758";
+  var description = "bla";
+  var amount = 5;
+  var request = require('sync-request');
+  var response = request('POST', 'http://localhost/bank/payment?sender=' + sender + '&receiver=' + receiver + '&amount=' + amount + '&description=' + description);
+  var body = response.getBody().toString();
+  var obj = JSON.parse(body);  
+  console.log('id ' +obj['id']);
+
+  var payRes = request('PUT', 'http://localhost/bank/payment/' +obj['id']);
+  var payBody = payRes.getBody().toString();
+  console.log('put: ' +payBody);
+
+  var reqBalance = request('GET', 'http://localhost/bank/payment/' +obj['id']);
+  var bodyBalance = reqBalance.getBody().toString();
+  console.log('get: ' +bodyBalance['amount']);
+
+  if(req.body.balance){
+         user.balance = req.bodyBalance['amount'];
+  }
+
+  
+
+})
+
 router.route('/login')
 
 .post(function(req, res, next) {
@@ -123,74 +245,7 @@ router.route('/login')
     }
   });
 })
-.delete(function(req, res) {
 
-  // retrieve the user
-  User.findById(req.params.user_id, function(err, user) {
-    if (err) {
-      res.status(500);
-      res.send(err);
-    } else {
-      if (user) {
-        // remove the user
-        user.remove();
-        res.json({
-          success: true,
-          message: 'User successfully deleted'
-        });
-      } else {
-        res.status(400);
-        res.json({
-          success: false,
-          message: 'Could not find user.'
-        });
-        res.send();
-      }
-    }
-  });
-})
 
-// updates a user
-.put(function(req, res) {
-  User.findById(req.params.user_id, function(err, user) {
-    
-    if(err) {
-      res.status(500);
-      res.send({
-        success: false,
-        message: 'Something went wrong ' + err
-      });
-    }  
-      if(req.body.username){
-         user.username = req.body.username;
-      }
-
-      if(req.body.password){
-         user.password = req.body.password;
-      }
-
-      if(req.body.display_name){
-         user.display_name = req.body.display_name;
-      }
-      if(req.body.e_mail){
-         user.e_mail = req.body.e_mail;
-      }
-      user.save(function(err) {
-      if (err) {
-        res.status(500);
-        res.send({
-          success: false,
-          message: 'Something went wrong'
-        });
-      } else {
-        res.status(200);
-        res.send({
-          success: true,
-          message: 'User updated'
-        });
-      }
-    });
-  });
-})
 
 module.exports = router;
