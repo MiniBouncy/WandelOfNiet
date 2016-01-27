@@ -3,6 +3,7 @@ var router = express.Router();
 var User = require('../db/models/user');
 var querystring = require('querystring');
 var http = require('http');
+var crypto = require('crypto');
 
 
 router.route('/')
@@ -196,7 +197,10 @@ router.route('/transaction')
 // TODO bank stuurt true terug als het aan die kant geslaagd is en dan kan de balance worden veranderd.
 .post(function(req, res, next) {
   var salt = 'A58JFK9874LAK';
-  var hash = null; //hash('sha256', 'wandelOfNiet' + salt);
+  //var hash = null; //hash('sha256', 'wandelOfNiet' + salt);
+  var hmac = crypto.createHmac('SHA256', salt);
+  var hash = hmac.update('wandelOfNiet').digest('base64');
+
 
   var postData = querystring.stringify({
     'sender' : 'NL16RABO0846653421',
