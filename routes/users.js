@@ -201,15 +201,17 @@ router.route('/transaction')
   var hmac = crypto.createHmac('SHA256', salt);
   var hash = hmac.update('wandelOfNiet').digest('base64');
 
-
+  
   var postData = querystring.stringify({
     'sender' : 'NL16RABO0846653421',
     'receiver' : 'NL08RABO0784598758',
-    'description' : 'bla',
-    'amount' : 5,
+    'description' : req.body.desc,
+    'amount' : req.body.amount,
     'hash' : hash
   });
 
+  // console.log('desc: ' +req.body.desc);
+  // console.log('amount: ' +req.body.amount);
   var options = {
     hostname: 'localhost',
     port: 80,
@@ -221,24 +223,36 @@ router.route('/transaction')
     }
   };
 
-  var req = http.request(options, (res) => {
-    console.log('STATUS: ' + res.statusCode);
-    console.log('HEADERS: ' + JSON.stringify(res.headers));
-    res.setEncoding('utf8');
-    res.on('data', (chunk) => {
-      console.log('BODY: ' + chunk);
+ //  console.log('data ' +postData);
+
+  var req = http.request(options, (bankRes) => {
+  //  console.log('STATUS: ' + bankRes.statusCode);
+  //  console.log('HEADERS: ' + JSON.stringify(bankRes.headers));
+    if(bankRes.statusCode==201) {
+      user.balance = req.body.amount;
+      res.send({
+      success: true,
+      message: 'Balance updated'
     });
-    res.on('end', () => {
-      console.log('No more data in response.')
-    })
-  });
+    } else {
+      res.send({
+        success: false,
+        message: 'Balance could not be updated'
+      });
+    }
 
-  req.on('error', (e) => {
-    console.log('problem with request: ' + e.message);
+    // bankRes.setEncoding('utf8');
+    // bankRes.on('data', (chunk) => {
+    //   console.log('BODY: ' + chunk);
+    // });
+    // bankRes.on('end', () => {
+    //   console.log('No more data in response.')
+    // })
   });
-
   // write data to request body
   req.write(postData);
+ 
+
   req.end();
 
 });
