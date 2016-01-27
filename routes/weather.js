@@ -8,7 +8,7 @@ router.route('/forecast')
 	var reqDate = new Date(dateParts[2], dateParts[0], dateParts[1], req.query.hour, 0, 0, 0); 
 	
 	var request = require('sync-request');
-	var response = request('GET', 'http://api.openweathermap.org/data/2.5/forecast?q=' + req.query.location + '&appid=2de143494c0b295cca9337e1e96b00e0');
+	var response = request('GET', 'http://api.openweathermap.org/data/2.5/forecast?q=' + req.query.location + '&appid=13086734c6d45a7cd736d537e16af1d3');
 	var body = response.getBody().toString();
 	var obj = JSON.parse(body);
 	var list = obj.list;

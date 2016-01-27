@@ -55,12 +55,12 @@ router.route('/:id')
 		result.title = title;
 	}
 	
-	var descStart = body.indexOf("<p itemprop=\"description\">");
+	var descStart = body.indexOf("itemprop=\"description\">");
 	if(descStart > -1) {
-		descStart += "<p itemprop=\"description\">\n".length;
-		var descEnd = body.indexOf("</p", descStart);
+		descStart += "itemprop=\"description\">\n".length;
+		var descEnd = body.indexOf("</", descStart);
 		var desc = body.substring(descStart, descEnd);
-		result.desc = desc;
+		result.desc = desc.trim().replace("\n", "");
 	}
 	
 	var imageStart = body.indexOf("<link rel='image_src' href=\"");
@@ -97,9 +97,11 @@ router.route('/:id')
 
 	result.stars = [];
 	var starsStart = body.indexOf("<h4 class=\"inline\">Star");
-	var starsEnd = body.indexOf("See full cast and crew");
+	var starsEnd = body.indexOf("See full cast & crew");
+	
 	var starStart = body.indexOf("itemprop=\"name\">", starsStart);
 	while(starStart > -1 && starStart >= starsStart && starStart < starsEnd) {
+		console.log("star")
 		starStart += "itemprop=\"name\">".length;
 		var starEnd = body.indexOf("</span", starStart);
 		var star = body.substring(starStart, starEnd);
