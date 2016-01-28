@@ -38,18 +38,19 @@ router.route('/')
 .post(function(req, res, next) {
   var user = new User();
   if(req.body.username){
-     user.username = req.body.username;
+    user.username = req.body.username;
   }
 
   if(req.body.password){
-     user.password = req.body.password;
+    user.password = req.body.password;
   }
 
   if(req.body.display_name){
-     user.display_name = req.body.display_name;
+    user.display_name = req.body.display_name;
   }
   if(req.body.e_mail){
-         user.e_mail = req.body.e_mail;
+    user.e_mail = req.body.e_mail;
+    console.log(req.body.e_mail);
   }
 
   user.save(function(err) {
@@ -126,6 +127,9 @@ router.route('/:user_id')
       if(req.body.e_mail){
          user.e_mail = req.body.e_mail;
       }
+      if(req.body.balance){
+         user.balance += req.body.balance;
+      }
       
       user.save(function(err) {
       if (err) {
@@ -194,53 +198,96 @@ router.route('/:user_id/balance')
 
 router.route('/transaction')
 
-// TODO bank stuurt true terug als het aan die kant geslaagd is en dan kan de balance worden veranderd.
+// Updates user balance after movie purchase
 .post(function(req, res, next) {
-  var salt = 'A58JFK9874LAK';
-  //var hash = null; //hash('sha256', 'wandelOfNiet' + salt);
-  var hmac = crypto.createHmac('SHA256', salt);
-  var hash = hmac.update('wandelOfNiet').digest('base64');
+  User.findOne({ _id: req.body.user_id }, function(err, user) {
+    if(user){
+      if(user.balance < req.body.amount) {
+        res.status(400);
+        res.send ({
+          success: false,
+          message: 'Account balance insufficient.'
+        });
+      } else {
+        var salt = 'A58JFK9874LAK';
+        //var hash = null; //hash('sha256', 'wandelOfNiet' + salt);
+        var hmac = crypto.createHmac('SHA256', salt);
+        var hash = hmac.update('wandelOfNiet').digest('base64');
 
+        
+        var postData = querystring.stringify({
+          'sender' : 'NL16RABO0846653421',
+          'receiver' : 'NL08RABO0784598758',
+          'description' : req.body.desc,
+          'amount' : req.body.amount,
+          'hash' : hash
+        });
 
-  var postData = querystring.stringify({
-    'sender' : 'NL16RABO0846653421',
-    'receiver' : 'NL08RABO0784598758',
-    'description' : 'bla',
-    'amount' : 5,
-    'hash' : hash
-  });
+        // console.log('desc: ' +req.body.desc);
+        // console.log('amount: ' +req.body.amount);
+        var options = {
+          hostname: 'localhost',
+          port: 80,
+          path: '/bank/payment',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': postData.length
+          }
+        };
 
-  var options = {
-    hostname: 'localhost',
-    port: 80,
-    path: '/bank/payment',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': postData.length
+       //  console.log('data ' +postData);
+
+        var bankReq = http.request(options, (bankRes) => {
+        //  console.log('STATUS: ' + bankRes.statusCode);
+        //  console.log('HEADERS: ' + JSON.stringify(bankRes.headers));
+          if(bankRes.statusCode==201) {
+            user.balance -= req.body.amount;
+            user.save(function(err) {
+              if (err) {
+                res.status(500);
+                res.send({
+                  success: false,
+                  message: 'Balance coud not be updated'
+                });
+              } else {
+                res.status(200);
+                res.send({
+                  success: true,
+                  message: 'User balance updated'
+                });
+              }
+            });
+          } else {
+            res.status(500);
+            res.send({
+              success: false,
+              message: 'Something went wrong at the bank'
+            });
+          }
+
+          // bankRes.setEncoding('utf8');
+          // bankRes.on('data', (chunk) => {
+          //   console.log('BODY: ' + chunk);
+          // });
+          // bankRes.on('end', () => {
+          //   console.log('No more data in response.')
+          // })
+        });
+        // write data to request body
+        bankReq.write(postData);
+       
+
+        bankReq.end();
+      }
+    } else {
+      res.status(500);
+      res.send({
+        success: false,
+        message: 'Could not find user'
+      });
     }
-  };
-
-  var req = http.request(options, (res) => {
-    console.log('STATUS: ' + res.statusCode);
-    console.log('HEADERS: ' + JSON.stringify(res.headers));
-    res.setEncoding('utf8');
-    res.on('data', (chunk) => {
-      console.log('BODY: ' + chunk);
-    });
-    res.on('end', () => {
-      console.log('No more data in response.')
-    })
   });
-
-  req.on('error', (e) => {
-    console.log('problem with request: ' + e.message);
-  });
-
-  // write data to request body
-  req.write(postData);
-  req.end();
-
 });
 
   // var sender = "NL16RABO0846653421";
