@@ -128,7 +128,7 @@ router.route('/:user_id')
          user.e_mail = req.body.e_mail;
       }
       if(req.body.balance){
-         user.balance += req.body.balance;
+         user.balance += +req.body.balance;
       }
       
       user.save(function(err) {
